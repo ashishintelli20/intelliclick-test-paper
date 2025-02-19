@@ -51,16 +51,17 @@ const CalculatorTabs: React.FC<CalculatorTabsProps> = ({handleCalculatorInput,in
   const tabs = [
     { label: 'Basic', content: <MathSymbolsGrid setSelectedInput={setSelectedInput} handleCalculatorInput={handleCalculatorInput} insertElement={insertElement} restoreSelection={restoreSelection}/> },
     { label: 'αβγ', content: <GreekSymbolsGrid setSelectedInput={setSelectedInput} handleCalculatorInput={handleCalculatorInput} insertElement={insertElement} restoreSelection={restoreSelection} /> },
-    { label: 'ABΓ', content: <GreekAlphabet setSelectedInput={setSelectedInput} handleCalculatorInput={handleCalculatorInput} insertElement={insertElement} restoreSelection={restoreSelection}/> },
+    { label: 'ABΓ', content: <GreekAlphabet setSelectedInput={setSelectedInput} handleCalculatorInput={handleCalculatorInput} insertElement={insertElement} restoreSelection={restoreSelection} /> },
     { label: 'sin cos', content: <TrigonometricFunctions setSelectedInput={setSelectedInput} handleCalculatorInput={handleCalculatorInput} insertElement={insertElement} restoreSelection={restoreSelection}/> },
     { label: '≥ ÷ →', content: <MathRelations setSelectedInput={setSelectedInput} handleCalculatorInput={handleCalculatorInput} insertElement={insertElement} restoreSelection={restoreSelection}/> },
     { label: 'π√∇', content: <MathSubsets setSelectedInput={setSelectedInput} handleCalculatorInput={handleCalculatorInput} insertElement={insertElement} restoreSelection={restoreSelection}/> },
-    { label: 'Σ∫∏', content: <Integration setSelectedInput={setSelectedInput} insertElement={insertElement} /> },
+    { label: 'Σ∫∏', content: <Integration setSelectedInput={setSelectedInput} handleCalculatorInput={handleCalculatorInput} insertElement={insertElement} /> },
     {
   label: '(□ □\n □ □)',
   content: <Matrix />
 },
-    { label: 'H₂O', content: <PeriodicTable insertElement={insertElement} restoreSelection={restoreSelection} /> },
+{ label: 'H₂O', content: <PeriodicTable handleCalculatorInput={handleCalculatorInput} insertElement={insertElement} restoreSelection={restoreSelection} /> },
+
     { label: 'Calculator', content: <FullCalculator setSelectedInput={setSelectedInput} insertElement={insertElement} restoreSelection={restoreSelection} /> },
   ];
 
