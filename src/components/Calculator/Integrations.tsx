@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import Modal from "./Modal";
 import { MathJax } from "better-react-mathjax";
 
-
 interface Props {
   handleCalculatorInput: (item: { type: "math"; value: string }) => void;
 }
@@ -13,12 +12,7 @@ const operations = [
   { label: "∭", value: "tripleIndefiniteIntegral", vars: ["dx", "dy", "dz"] },
   { label: "∫□", value: "integral", limits: 2, vars: ["dx"] },
   { label: "∬□□", value: "doubleIntegral", limits: 4, vars: ["dx", "dy"] },
-  {
-    label: "∭□□□",
-    value: "tripleIntegral",
-    limits: 6,
-    vars: ["dx", "dy", "dz"],
-  },
+  { label: "∭□□□", value: "tripleIntegral", limits: 6, vars: ["dx", "dy", "dz"] },
   { label: "Σ", value: "sum" },
   { label: "∏", value: "product" },
   { label: "lim", value: "limit", limits: 2 },
@@ -32,9 +26,7 @@ const operations = [
   { label: "∂/∂x", value: "partialDerivative" },
 ];
 
-const IntegrationAndDerivatives: React.FC<Props> = ({
-  handleCalculatorInput,
-}) => {
+const IntegrationAndDerivatives: React.FC<Props> = ({ handleCalculatorInput }) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedOp, setSelectedOp] = useState<{
     label: string;
@@ -45,26 +37,20 @@ const IntegrationAndDerivatives: React.FC<Props> = ({
   const [limits, setLimits] = useState<string[]>([]);
   const [functionInput, setFunctionInput] = useState("");
 
-  const openModal = (operation: {
-    label: string;
-    value: string;
-    limits?: number;
-    vars?: string[];
-  }) => {
-    setSelectedOp(operation);
-    setLimits(Array(operation.limits || 0).fill(""));
-    setShowModal(true);
+  const openModal = (operation: { label: string; value: string; limits?: number; vars?: string[] }) => {
+    // Open modal ONLY for definite and indefinite integrals
+    if (
+      operation.value.includes("Integral") || // Checks all integral types
+      operation.value === "integral" // Ensures single definite integral also triggers modal
+    ) {
+      setSelectedOp(operation);
+      setLimits(Array(operation.limits || 0).fill(""));
+      setShowModal(true);
+    } else {
+      // Directly add to input without modal
+      handleCalculatorInput({ type: "math", value: ` ${operation.label} ` });
+    }
   };
-
-  const CreateQuestion = ({ question }: { question: { type: string; value: string } }) => (
-    <div className="p-2 border rounded">
-      {question.type === "math" ? (
-        <MathJax>{`$$ ${question.value} $$`}</MathJax>
-      ) : (
-        <p>{question.value}</p>
-      )}
-       </div>
-);
 
   const closeModalHandler = () => setShowModal(false);
 
@@ -79,24 +65,18 @@ const IntegrationAndDerivatives: React.FC<Props> = ({
       alert("Please fill in all fields.");
       return;
     }
-  
-    // Start with integral notation
+
     let integralExpression = ``;
-  
     for (let i = 0; i < limits.length; i += 2) {
       integralExpression += `\\int_{${limits[i]}}^{${limits[i + 1]}} `;
     }
-  
+
     integralExpression += `${functionInput} \\,${selectedOp?.vars?.join(" ")} `;
-  
-    // Send formatted LaTeX expression
+
     handleCalculatorInput({ type: "math", value: ` ${integralExpression} ` });
-  
+
     closeModalHandler();
   };
-  
-  
-  
 
   return (
     <div className="bg-white shadow-md rounded-md w-full mx-auto p-4">
@@ -114,9 +94,7 @@ const IntegrationAndDerivatives: React.FC<Props> = ({
 
       {showModal && selectedOp && (
         <Modal onClose={closeModalHandler}>
-          <h2 className="text-lg font-semibold mb-4">
-            Enter {selectedOp.label} Details
-          </h2>
+          <h2 className="text-lg font-semibold mb-4">Enter {selectedOp.label} Details</h2>
 
           <div className="grid gap-2 mb-4">
             {Array.from({ length: limits.length / 2 }, (_, i) => (
