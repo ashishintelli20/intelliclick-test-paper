@@ -1,170 +1,161 @@
-import React, { useState } from 'react';
-import { evaluate } from 'mathjs';
+import React, { useState } from "react";
+import Modal from "./Modal";
+import { MathJax } from "better-react-mathjax";
 
-interface IntegrationAndDerivativesProps {
-  // setSelectedInput: (value: string) => void;
-    setSelectedInput: (value: string | ((prev: string) => string)) => void;
-      insertElement: (html: string) => void;
+
+interface Props {
+  handleCalculatorInput: (item: { type: "math"; value: string }) => void;
 }
 
 const operations = [
-  { label: '∫', value: 'integral(' },
-  { label: '∬', value: 'doubleIntegral(' },
-  { label: '∭', value: 'tripleIntegral(' },
-  { label: '∫□□', value: 'definiteIntegral(lower, upper, ' },
-  { label: '∬□□', value: 'doubleDefiniteIntegral(lower1, upper1, lower2, upper2, ' },
-  { label: '∭□□□', value: 'tripleDefiniteIntegral(lower1, upper1, lower2, upper2, lower3, upper3, ' },
-  { label: 'Σ', value: 'sum(' },
-  { label: '∏', value: 'product(' },
-  { label: 'lim', value: 'limit(' },
-  { label: 'lim→∞', value: 'limitToInfinity(' },
-  { label: 'lim x→0-', value: 'limit(x, 0, -)' },
-  { label: 'lim x→0+', value: 'limit(x, 0, +)' },
-  { label: 'd/dx', value: 'derivative(' },
-  { label: 'd²/dx²', value: 'secondDerivative(' },
-  { label: '□\'', value: '(□)\'' },
-  { label: '□\'\'', value: '(□)\'\'' },
-  { label: '∂/∂x', value: 'partialDerivative(' },
+  { label: "∫ ", value: "indefiniteIntegral", vars: ["dx"] },
+  { label: "∬ ", value: "doubleIndefiniteIntegral", vars: ["dx", "dy"] },
+  { label: "∭", value: "tripleIndefiniteIntegral", vars: ["dx", "dy", "dz"] },
+  { label: "∫□", value: "integral", limits: 2, vars: ["dx"] },
+  { label: "∬□□", value: "doubleIntegral", limits: 4, vars: ["dx", "dy"] },
+  {
+    label: "∭□□□",
+    value: "tripleIntegral",
+    limits: 6,
+    vars: ["dx", "dy", "dz"],
+  },
+  { label: "Σ", value: "sum" },
+  { label: "∏", value: "product" },
+  { label: "lim", value: "limit", limits: 2 },
+  { label: "lim→∞", value: "limitToInfinity" },
+  { label: "lim x→0-", value: "limit(x, 0, -)" },
+  { label: "lim x→0+", value: "limit(x, 0, +)" },
+  { label: "d/dx", value: "derivative" },
+  { label: "d²/dx²", value: "secondDerivative" },
+  { label: "□'", value: "(□)'" },
+  { label: "□''", value: "(□)''" },
+  { label: "∂/∂x", value: "partialDerivative" },
 ];
 
-const IntegrationAndDerivatives: React.FC<IntegrationAndDerivativesProps> = ({setSelectedInput,insertElement}) => {
-  const [input, setInput] = useState<string>('');
-  const [result, setResult] = useState<string>('');
+const IntegrationAndDerivatives: React.FC<Props> = ({
+  handleCalculatorInput,
+}) => {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedOp, setSelectedOp] = useState<{
+    label: string;
+    value: string;
+    limits?: number;
+    vars?: string[];
+  } | null>(null);
+  const [limits, setLimits] = useState<string[]>([]);
+  const [functionInput, setFunctionInput] = useState("");
 
-  const handleClick = (value: string) => {
-    if (value === '∫□□') {
-      insertElement(
-        `<span style="display: inline-flex; align-items: center; margin: 0 5px;">
-          <span style="display: flex; flex-direction: column; align-items: center;">
-            <input type="text" placeholder="Upper" style="width: 40px; margin-bottom: 3px;" />
-            <span style="font-size: 20px; margin: 0 5px;">∫</span>
-            <input type="text" placeholder="Lower" style="width: 40px; margin-top: 3px;" />
-          </span>
-          <input type="text" placeholder="f(x)" style="width: 60px; margin-left: 5px;" autofocus />
-        </span>`
-      );
-    }
-    else if (value === '∬□□') {
-      insertElement(
-        `<span style="display: inline-flex; align-items: center; margin: 0 5px;">
-          <!-- Double Integral with Limits (Repeated Twice) -->
-          <span style="display: flex; flex-direction: column; align-items: center; margin: 0 5px;">
-            <input type="text" placeholder="Upper" style="width: 40px; margin-bottom: 3px; text-align: center;" />
-            <span style="font-size: 20px; margin: 0 5px;">∫</span>
-            <input type="text" placeholder="Lower" style="width: 40px; margin-top: 3px; text-align: center;" />
-          </span>
-          <span style="display: flex; flex-direction: column; align-items: center; margin: 0 5px;">
-            <input type="text" placeholder="Upper" style="width: 40px; margin-bottom: 3px; text-align: center;" />
-            <span style="font-size: 20px; margin: 0 5px;">∫</span>
-            <input type="text" placeholder="Lower" style="width: 40px; margin-top: 3px; text-align: center;" />
-          </span>
-          <!-- Input Field to the Right -->
-          <input type="text" placeholder="Function" style="width: 80px; margin-left: 5px; text-align: center;" />
-        </span>`)
-    }
-    else if (value === '∭□□□') {
-      insertElement(
-        `<span style="display: inline-flex; align-items: center; margin: 0 5px;">
-          <!-- Double Integral with Limits (Repeated Twice) -->
-          <span style="display: flex; flex-direction: column; align-items: center; margin: 0 5px;">
-            <input type="text" placeholder="Upper" style="width: 40px; margin-bottom: 3px; text-align: center;" />
-            <span style="font-size: 20px; margin: 0 5px;">∫</span>
-            <input type="text" placeholder="Lower" style="width: 40px; margin-top: 3px; text-align: center;" />
-          </span>
-          <span style="display: flex; flex-direction: column; align-items: center; margin: 0 5px;">
-            <input type="text" placeholder="Upper" style="width: 40px; margin-bottom: 3px; text-align: center;" />
-            <span style="font-size: 20px; margin: 0 5px;">∫</span>
-            <input type="text" placeholder="Lower" style="width: 40px; margin-top: 3px; text-align: center;" />
-          </span>
-          <!-- Input Field to the Right -->
-          <input type="text" placeholder="Function" style="width: 80px; margin-left: 5px; text-align: center;" />
-        </span>`)
-    } else if (value === '∫' || value === '∬' || value === '∭'){
-      insertElement(
-        `<span style="display: inline-flex; align-items: center; margin: 0 5px;">
-          <span style="display: flex; flex-direction: column; align-items: center;">
-            <span style="font-size: 20px; margin: 0 5px;">${value}</span>
-          </span>
-          <input type="text" placeholder="f()" style="width: 40px; margin-left: 5px;" />
-        </span>
-        `
-      )
-    }else if (value === 'Σ' || value === '∏') {
-      insertElement(
-        `<span style="display: inline-flex; align-items: center; margin: 0 5px;">
-          <span style="display: flex; flex-direction: column; align-items: center;">
-            <input type="text" placeholder="Upper" style="width: 40px; margin-bottom: 3px;" />
-            <span style="font-size: 20px; margin: 0 5px;">${value}</span>
-            <input type="text" placeholder="Lower" style="width: 40px; margin-top: 3px;" />
-          </span>
-          <input type="text" placeholder="f(x)" style="width: 60px; margin-left: 5px;" autofocus />
-        </span>`
-      );
-    }
-    else {
-      insertElement(`<span>${value}</span>`)
-    }
-    setInput((prev) => prev + value);
-    setSelectedInput((prev) => prev + value);
+  const openModal = (operation: {
+    label: string;
+    value: string;
+    limits?: number;
+    vars?: string[];
+  }) => {
+    setSelectedOp(operation);
+    setLimits(Array(operation.limits || 0).fill(""));
+    setShowModal(true);
   };
 
-  const handleEvaluate = () => {
-    try {
-      const evalResult = evaluate(input); // Customize evaluation for advanced operations
-      setResult(evalResult.toString());
-    } catch {
-      setResult('Error');
-    }
+  const CreateQuestion = ({ question }: { question: { type: string; value: string } }) => (
+    <div className="p-2 border rounded">
+      {question.type === "math" ? (
+        <MathJax>{`$$ ${question.value} $$`}</MathJax>
+      ) : (
+        <p>{question.value}</p>
+      )}
+       </div>
+);
+
+  const closeModalHandler = () => setShowModal(false);
+
+  const handleLimitChange = (index: number, value: string) => {
+    const newLimits = [...limits];
+    newLimits[index] = value;
+    setLimits(newLimits);
   };
 
-  const handleClear = () => {
-    setInput('');
-    setResult('');
+  const handleSubmit = () => {
+    if (limits.some((limit) => limit === "") || functionInput === "") {
+      alert("Please fill in all fields.");
+      return;
+    }
+  
+    // Start with integral notation
+    let integralExpression = ``;
+  
+    for (let i = 0; i < limits.length; i += 2) {
+      integralExpression += `\\int_{${limits[i]}}^{${limits[i + 1]}} `;
+    }
+  
+    integralExpression += `${functionInput} \\,${selectedOp?.vars?.join(" ")} `;
+  
+    // Send formatted LaTeX expression
+    handleCalculatorInput({ type: "math", value: ` ${integralExpression} ` });
+  
+    closeModalHandler();
   };
+  
+  
+  
 
   return (
-    <div className="bg-white shadow-md rounded-md w-full mx-auto">
-      {/* <div className="mb-4">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="w-full p-2 border rounded-md text-lg"
-          placeholder="Enter expression"
-        />
-        <p className="mt-2 text-green-600 font-semibold">Result: {result}</p>
-      </div>
-
-      <h3 className="text-lg font-medium mb-2">Integrals, Derivatives, and Calculus</h3> */}
+    <div className="bg-white shadow-md rounded-md w-full mx-auto p-4">
       <div className="grid grid-cols-8 gap-2">
-        {operations.map((operation) => (
+        {operations.map((op) => (
           <button
-            key={operation.label}
-            onClick={() => handleClick(operation.label)}
+            key={op.value}
+            onClick={() => openModal(op)}
             className="p-2 bg-blue-100 hover:bg-blue-200 rounded-md text-sm"
           >
-            {operation.label}
+            {op.label}
           </button>
         ))}
       </div>
 
-      {/* <div className="mt-4 flex gap-2">
-        <button
-          onClick={handleEvaluate}
-          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md"
-        >
-          Evaluate
-        </button>
-        <button
-          onClick={handleClear}
-          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md"
-        >
-          Clear
-        </button>
-      </div> */}
+      {showModal && selectedOp && (
+        <Modal onClose={closeModalHandler}>
+          <h2 className="text-lg font-semibold mb-4">
+            Enter {selectedOp.label} Details
+          </h2>
+
+          <div className="grid gap-2 mb-4">
+            {Array.from({ length: limits.length / 2 }, (_, i) => (
+              <div key={i} className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={limits[i * 2]}
+                  onChange={(e) => handleLimitChange(i * 2, e.target.value)}
+                  placeholder={`Limit ${i * 2 + 1}`}
+                  className="p-2 border rounded text-center"
+                />
+                <input
+                  type="text"
+                  value={limits[i * 2 + 1]}
+                  onChange={(e) => handleLimitChange(i * 2 + 1, e.target.value)}
+                  placeholder={`Limit ${i * 2 + 2}`}
+                  className="p-2 border rounded text-center"
+                />
+              </div>
+            ))}
+          </div>
+
+          <input
+            type="text"
+            value={functionInput}
+            onChange={(e) => setFunctionInput(e.target.value)}
+            placeholder="Function f(x)"
+            className="p-2 border rounded w-full mb-4"
+          />
+          <button
+            onClick={handleSubmit}
+            className="bg-green-500 text-white p-2 rounded hover:bg-green-600 w-full"
+          >
+            Submit
+          </button>
+        </Modal>
+      )}
     </div>
   );
 };
 
 export default IntegrationAndDerivatives;
-

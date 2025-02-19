@@ -16,10 +16,11 @@ const GreekAlphabets = [
 const GreekAlphabet: React.FC<GreekAlphabetProps> = ({setSelectedInput,handleCalculatorInput,insertElement,restoreSelection}) => {
 
   const handleClick = (value: string) => {
+    // setSelectedInput((prev) => prev + value);
     setSelectedInput((prev) => prev + value);
-    handleCalculatorInput(value);
-    restoreSelection()
-    insertElement(`<span>${value}</span>`);
+    handleCalculatorInput({type:'text',value:value});
+    // restoreSelection()
+    // insertElement(`<span>${value}</span>`);
   };
   return (
     <div className="bg-white shadow-md rounded-md w-full mx-auto">
